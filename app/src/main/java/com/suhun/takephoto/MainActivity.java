@@ -1,18 +1,38 @@
 package com.suhun.takephoto;
 
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.view.View;
 import android.widget.ImageView;
 
 public class MainActivity extends AppCompatActivity {
     private String tag = MainActivity.class.getSimpleName();
     private ImageView img1, img2;
+    private ActivityResultLauncher<Intent> takePhotoNotSaveResultLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
+                    new ActivityResultCallback<ActivityResult>() {
+                        @Override
+                        public void onActivityResult(ActivityResult result) {
+                            if(result.getResultCode() == RESULT_OK){
+                                Bitmap bitmap = (Bitmap) result.getData().getExtras().get("data");
+                                img1.setImageBitmap(bitmap);
+                            }
+
+                        }
+                    });
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,7 +62,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void takePhotoNotSaveToDevice(View view){
-
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        takePhotoNotSaveResultLauncher.launch(intent);
     }
 
     public void takePhotoSaveToDevice(View view){
