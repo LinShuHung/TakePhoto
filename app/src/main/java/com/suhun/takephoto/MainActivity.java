@@ -7,19 +7,27 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
+
+import java.io.File;
 
 public class MainActivity extends AppCompatActivity {
     private String tag = MainActivity.class.getSimpleName();
     private ImageView img1, img2;
+    private File saveDir;
     private ActivityResultLauncher<Intent> takePhotoNotSaveResultLauncher =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
                     new ActivityResultCallback<ActivityResult>() {
@@ -29,10 +37,19 @@ public class MainActivity extends AppCompatActivity {
                                 Bitmap bitmap = (Bitmap) result.getData().getExtras().get("data");
                                 img1.setImageBitmap(bitmap);
                             }
-
                         }
                     });
 
+    private ActivityResultLauncher<Intent> takePhotoSaveResultLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
+                    new ActivityResultCallback<ActivityResult>() {
+                        @Override
+                        public void onActivityResult(ActivityResult result) {
+                            String filepath = new File(saveDir + "/test.jpg").getAbsolutePath();
+                            Bitmap bitmap = BitmapFactory.decodeFile(filepath);
+                            img2.setImageBitmap(bitmap);
+                        }
+                    });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,6 +84,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void takePhotoSaveToDevice(View view){
+        Uri uri = FileProvider.getUriForFile(this, getPackageName() + ".fileprovider", new File(saveDir + "/test.jpg"));
+        Log.d(tag, "----uri " + uri +"----");
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
+        takePhotoSaveResultLauncher.launch(intent);
 
     }
 
@@ -84,5 +106,6 @@ public class MainActivity extends AppCompatActivity {
     private void initTakePhoto(){
         img1 = findViewById(R.id.lid_img1);
         img2 = findViewById(R.id.lid_img2);
+        saveDir = Environment.getExternalStoragePublicDirectory("HiskioPhoto");
     }
 }
